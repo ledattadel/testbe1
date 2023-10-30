@@ -32,7 +32,7 @@
    },
    "scripts": {
       "migration": "typeorm migration:create ./path-to-migrations-dir/PostRefactoring",
-      "start": "nodemon src/app.ts",
+      "start": "node src/app.ts",
       "typeorm": "typeorm-ts-node-commonjs"
    }
 }
