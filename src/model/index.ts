@@ -17,7 +17,9 @@ import { RepairOrderDetail } from './RepairOrderDetail';
 import { Service } from './Service';
 import { Supplier } from './Supplier';
 import { Vehicle } from './Vehicle';
+import { VehicleStatus } from './VehicleStatus';
 export {
+  VehicleStatus,
   Role,
   Staff,
   Customer,

@@ -4,6 +4,7 @@ import { Customer } from './index';
 import { Vehicle } from './index';
 import { PriceQuote } from './PriceQuote';
 import { Invoice } from './Invoice';
+import { VehicleStatus } from './VehicleStatus';
 
 @Entity()
 export class Receipt {
@@ -58,6 +59,9 @@ export class Receipt {
   @ManyToOne(() => Vehicle, (vehicle) => vehicle.receipts)
   @JoinColumn({ name: 'VehicleID' })
   vehicle: Vehicle;
+
+  @OneToMany(() => VehicleStatus, (vehicle) => vehicle.receipt)
+  vehicleStatuses: VehicleStatus[];
 
   @OneToMany(() => PriceQuote, (pq) => pq.receipt)
   priceQuotes: PriceQuote[];
