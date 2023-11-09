@@ -305,8 +305,7 @@ class PriceQuoteService {
       newPriceQuote.Time = Time;
       newPriceQuote.StaffID = StaffID;
       newPriceQuote.isActive = true;
-
-
+      
       const existReceipt = await receiptRepository.findOne({
         where: { ReceiptID: ReceiptID },
       });

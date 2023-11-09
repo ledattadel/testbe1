@@ -13,6 +13,7 @@ import PriceQuoteRoute from './Pricequote.route'
 import productdetailRoute from './Productdetail.route'
 import RepairRoute from './Repair.route'
 import InvoiceRoute from './invoice.route'
+import VehicleStatusRoute from './VehicleStatus.route'
 const router = (app) => {
 
 	app.use('/api/staff',StaffRoute);
@@ -29,6 +30,7 @@ const router = (app) => {
 	app.use('/api/productdetail', productdetailRoute)
 	app.use('/api/repair', RepairRoute)
 	app.use('/api/invoice', InvoiceRoute)
+	app.use('/api/vehiclestatus', VehicleStatusRoute)
 }
 
 export default router;

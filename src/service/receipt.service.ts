@@ -383,8 +383,56 @@ class ReceiptService {
       return res.status(500).json({ error: messages.internalServerError });
     }
   }
-  
+  async getByIdVehicleStatus(req, res) {
 
+  }
+  async createVehicleStatus(req, res) {
+    try {
+      const vehicleStatusRepo = AppDataSource.getRepository(VehicleStatus);
+      const receiptRepo = AppDataSource.getRepository(Receipt);
+      const { name, condition, isDone, isTranferToPriceQuote, receiptId } = req.body;
+      
+      if (!name || !condition ) {
+        return res.status(400).json({
+          code: 400,
+          message: "Missing vehicle status fields",
+        });
+      }
+  
+      const receiptQuery = await receiptRepo.findOne({ where: { ReceiptID: receiptId } });
+  
+      // if (!receiptQuery) {
+      //   return res.status(404).json({ message:"Receipt not found" });
+      // }
+  
+      const vehicleStatus = new VehicleStatus();
+      vehicleStatus.Name = name;
+      vehicleStatus.Condition = condition;
+      vehicleStatus.IsDone = isDone || false;
+      vehicleStatus.isTranferToPriceQuote = isTranferToPriceQuote || false;
+      vehicleStatus.ReceiptId = receiptId || null;
+  
+      await vehicleStatusRepo.save(vehicleStatus);
+  
+      return res.status(201).json({
+        message: "Create vehicle status successful",
+      });
+    } catch (error) {
+      return res.status(500).json({
+        error: messages.internalServerError,
+      });
+    }
+  }
+  async getAllVehicleStatus(req, res) {
+    try {
+      const vehicleStatusRepo = AppDataSource.getRepository(VehicleStatus);
+      const vehicleStatuses = await vehicleStatusRepo.find({});
+      return res.json(vehicleStatuses);
+    } catch (error) {
+      return res.status(500).json({ error: error});
+    }
+  }
+  async updateVehicleStatus(req, res) {}
 
 
 

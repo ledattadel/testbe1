@@ -12,7 +12,9 @@ import PriceQuoteService from './pricequote.service';
 import ProductdetailService from './productdetail.service';
 import RepairService from './repair.service';
 import invoiceService from './invoice.service';
+import  VehicleStatusService from './VehicleStatusService.service';
 export {
+    VehicleStatusService,
     invoiceService,
     RepairService,
     ProductdetailService,

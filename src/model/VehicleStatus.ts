@@ -24,7 +24,7 @@ export class VehicleStatus {
   @Column({ nullable: false, default: false })
   isTranferToPriceQuote: boolean;
 
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   ReceiptId: number;
 
   @ManyToOne(() => Receipt, (receipt) => receipt.vehicleStatuses)
