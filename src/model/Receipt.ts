@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { Staff } from './index';
 import { Customer } from './index';
-import { Vehicle } from './index';
+import { Vehicle, VehicleStatusReceipt } from './index';
 import { PriceQuote } from './PriceQuote';
 import { Invoice } from './Invoice';
 import { VehicleStatus } from './VehicleStatus';
@@ -56,8 +56,10 @@ export class Receipt {
   @JoinColumn({ name: 'VehicleID' })
   vehicle: Vehicle;
 
-  @OneToMany(() => VehicleStatus, (vehicle) => vehicle.receipt)
-  vehicleStatuses: VehicleStatus[];
+  
+  @OneToMany(() => VehicleStatusReceipt, (vsr) => vsr.receipt)
+  vehicleStatusReceipts: VehicleStatusReceipt[];
+
 
   @OneToMany(() => PriceQuote, (pq) => pq.receipt)
   priceQuotes: PriceQuote[];

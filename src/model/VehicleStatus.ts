@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany , ManyToOne, JoinColumn} from 'typeorm';
-import { Receipt, Brand , PriceQuote, PQProductDetail, PQServiceDetail} from './index';
+import { Receipt, Brand , PriceQuote, PQProductDetail, PQServiceDetail, VehicleStatusReceipt} from './index';
 import vehicleService from '../service/vehicle.service';
 
 
@@ -11,25 +11,16 @@ export class VehicleStatus {
   @Column({ nullable: false })
   Name: string;
 
-  @Column({ nullable: true })
-  TimeCreate: String;
-  
-  @Column({ nullable: true })
-  Condition: string;
+  // @Column({ nullable: true })
+  // ReceiptId: number;
 
-  
-  @Column({ nullable: true })
-  IsDone: boolean;
+  // @ManyToOne(() => Receipt, (receipt) => receipt.vehicleStatuses)
+  // @JoinColumn({ name: 'ReceiptId' })
+  // receipt: Receipt;
 
-  @Column({ nullable: false, default: false })
-  isTranferToPriceQuote: boolean;
+  @OneToMany(() => VehicleStatusReceipt, (vsr) => vsr.vehicleStatus)
+  vehicleStatusReceipts: VehicleStatusReceipt[];
 
-  @Column({ nullable: true })
-  ReceiptId: number;
-
-  @ManyToOne(() => Receipt, (receipt) => receipt.vehicleStatuses)
-  @JoinColumn({ name: 'ReceiptId' })
-  receipt: Receipt;
 
   @OneToMany(() => PQProductDetail, (pqProductDetail) => pqProductDetail.vehicleStatus)
   pqProductDetails: PQProductDetail[];

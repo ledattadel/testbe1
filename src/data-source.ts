@@ -19,7 +19,7 @@ import {
   Service,
   Supplier,
   Vehicle,
-  
+  VehicleStatusReceipt,
   VehicleStatus
 } from './model';
 
@@ -36,7 +36,7 @@ export const AppDataSource = new DataSource({
   synchronize: true,
   logging: false,
   entities: [
-    
+    VehicleStatusReceipt,
   VehicleStatus,
   Role,
   Staff,

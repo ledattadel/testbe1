@@ -1,5 +1,5 @@
 import { AppDataSource } from '../data-source';
-import { Receipt , Staff, Customer, Vehicle, Brand, VehicleStatus} from '../model'; // Đảm bảo bạn import model `Receipt`
+import { Receipt , Staff, Customer, Vehicle, Brand, VehicleStatus, VehicleStatusReceipt} from '../model'; // Đảm bảo bạn import model `Receipt`
 import messages from '../messageResponse.js';
 import {parseDateStringToDate, spitDateFromString, compareDateStrings, compare2DateBetweenStrings} from '../utils/support'
 class ReceiptService {
@@ -34,7 +34,8 @@ class ReceiptService {
         relations:[
           'staff',
           'customer',
-          'vehicle'
+          'vehicle',
+          'vehicleStatusReceipts.vehicleStatus'
         ]
       });
       return res.json(receipts.reverse());
@@ -67,14 +68,17 @@ class ReceiptService {
         const vehicleRepo = AppDataSource.getRepository(Vehicle)
         const brandRepo = AppDataSource.getRepository(Brand);
         const vehicleStatusRepo = AppDataSource.getRepository(VehicleStatus);
+        const VehicleStatusReceiptRepo = AppDataSource.getRepository(VehicleStatusReceipt);
 
       const {timeCreate, staffId, customerPhoneNumber, customerName, email, NumberPlateVehicle, TypeVehicle, ColorVehicle, EngineNumberVehicle, ChassisNumberVehicle, BrandNameVehicle , vehicleStatus ,Note 
       }= req.body;
       
-      if (!timeCreate || !staffId || !customerPhoneNumber || !customerName || !email || !NumberPlateVehicle || !TypeVehicle || !ColorVehicle || !EngineNumberVehicle || !ChassisNumberVehicle || !BrandNameVehicle || !vehicleStatus ) {
+      const requiredFields = ['timeCreate', 'staffId', 'customerPhoneNumber', 'customerName', 'email', 'NumberPlateVehicle', 'TypeVehicle', 'ColorVehicle', 'EngineNumberVehicle', 'ChassisNumberVehicle', 'BrandNameVehicle', 'vehicleStatus'];
+      const missingFields = requiredFields.filter(field => !req.body[field]);
+      if (missingFields.length > 0) {
         return res.status(400).json({
           code: 400,
-          message: messages.missingReceiptFields ,
+          message: `Missing required fields: ${missingFields.join(', ')}`,
         });
       }
 
@@ -143,12 +147,20 @@ class ReceiptService {
 
       if (vehicleStatus) {
         for (let index = 0; index < vehicleStatus.length; index++) {
+          const vehicleStatusReceipt = new VehicleStatusReceipt();
           const vehicleStatusExist = await vehicleStatusRepo.findOne({ where: { ID: vehicleStatus[index].id } });
-          vehicleStatusExist.Condition = vehicleStatus[index].condition || vehicleStatusExist.Condition;
-          vehicleStatusExist.IsDone = false;
-          vehicleStatusExist.Name = vehicleStatus[index].name || vehicleStatusExist.Name;
-          vehicleStatusExist.ReceiptId = receipt.ReceiptID;
-          vehicleStatusRepo.save(vehicleStatusExist);
+          if (!vehicleStatusExist) {
+            return res.status(500).json({
+              error: 'Vehicle status not found',
+            });
+          }
+          vehicleStatusReceipt.Condition = vehicleStatus[index].condition;
+          vehicleStatusReceipt.IsDone = false;
+          vehicleStatusReceipt.isTranferToPriceQuote = false;
+          vehicleStatusReceipt.TimeCreate = timeCreate;
+          vehicleStatusReceipt.VehicleStatusID = vehicleStatusExist.ID;
+          vehicleStatusReceipt.ReceiptID=receipt.ReceiptID;
+          VehicleStatusReceiptRepo.save(vehicleStatusReceipt);  
         }
       }
 

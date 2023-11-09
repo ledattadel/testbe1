@@ -29,10 +29,7 @@ class VehicleStatusService {
   
       const vehicleStatus = new VehicleStatus();
       vehicleStatus.Name = name;
-      vehicleStatus.Condition = condition || null;
-      vehicleStatus.IsDone = isDone || false;
-      vehicleStatus.isTranferToPriceQuote = isTranferToPriceQuote || false;
-      vehicleStatus.ReceiptId = receiptId || null;
+ 
   
       await vehicleStatusRepo.save(vehicleStatus);
   
@@ -64,10 +61,7 @@ class VehicleStatusService {
           return res.status(404).json({ message: "Vehicle status not found" });
         }
         vehicleStatus.Name = name || vehicleStatus.Name;
-        vehicleStatus.Condition = condition || vehicleStatus.Condition;
-        vehicleStatus.IsDone = isDone || vehicleStatus.IsDone;
-        vehicleStatus.isTranferToPriceQuote = isTranferToPriceQuote || vehicleStatus.isTranferToPriceQuote;
-        vehicleStatus.ReceiptId = receiptId || vehicleStatus.ReceiptId;
+   
         await vehicleStatusRepo.save(vehicleStatus);
         return res.status(200).json({ message: "update vehicle status successful" });
     }catch(error){
