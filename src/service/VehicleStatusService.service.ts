@@ -54,9 +54,41 @@ class VehicleStatusService {
       return res.status(500).json({ error: error});
     }
   }
-  async updateVehicleStatus(req, res) {}
-
-
+  async updateVehicleStatus(req, res) {
+    try {
+        const vehicleStatusRepo = AppDataSource.getRepository(VehicleStatus);
+        const { id } = req.params;
+        const { name, condition, isDone, isTranferToPriceQuote, receiptId } = req.body;
+        const vehicleStatus = await vehicleStatusRepo.findOne({ where: { ID: id } });
+        if (!vehicleStatus) {
+          return res.status(404).json({ message: "Vehicle status not found" });
+        }
+        vehicleStatus.Name = name || vehicleStatus.Name;
+        vehicleStatus.Condition = condition || vehicleStatus.Condition;
+        vehicleStatus.IsDone = isDone || vehicleStatus.IsDone;
+        vehicleStatus.isTranferToPriceQuote = isTranferToPriceQuote || vehicleStatus.isTranferToPriceQuote;
+        vehicleStatus.ReceiptId = receiptId || vehicleStatus.ReceiptId;
+        await vehicleStatusRepo.save(vehicleStatus);
+        return res.status(200).json({ message: "update vehicle status successful" });
+    }catch(error){
+        return res.status(500).json({ error: error});
+    }
+  }
+   async deleteVehicleStatus(req, res) {
+        try {
+            const vehicleStatusRepo = AppDataSource.getRepository(VehicleStatus);
+            const { id } = req.params;
+            const vehicleStatus = await vehicleStatusRepo.findOne({ where: { ID: id } });
+            if (!vehicleStatus) {
+              return res.status(404).json({ message: "Vehicle status not found" });
+            }
+            await vehicleStatusRepo.remove(vehicleStatus);
+            return res.status(200).json({ message: "Delete vehicle status successful" });
+    }
+    catch(error){
+        return res.status(500).json({ error: error});
+    }
+   }
 
 }
 

@@ -10,6 +10,7 @@ router.get('', VehicleStatusService.getAllVehicleStatus);
 router.get('/:id', VehicleStatusService.getByIdVehicleStatus);
 router.post('', VehicleStatusService.createVehicleStatus);
 router.patch('/:id', VehicleStatusService.updateVehicleStatus);
+router.delete('/:id', VehicleStatusService.deleteVehicleStatus);
 
 
 
