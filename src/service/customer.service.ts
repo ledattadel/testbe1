@@ -1,9 +1,14 @@
 import { getRepository } from 'typeorm';
 import { AppDataSource } from '../data-source';
-import {parseDateStringToDate, spitDateFromString, compareDateStrings, compare2DateBetweenStrings} from '../utils/support'
+import {parseDateStringToDate, spitDateFromString, compareDateStrings, compare2DateBetweenStrings, generateRandomPassword} from '../utils/support'
 import { Customer } from '../model/index';
 import messages from '../messageResponse.js'
-
+import { sendEmail,
+  htmlCreateAccount,
+  htmlResetPassword,
+  htmlWarningLogin,
+  htmlBill,
+  htmlCancelOrder} from '../utils/mail.config.js'
 class CustomerService {
 
 
@@ -44,7 +49,7 @@ class CustomerService {
   async create(req, res) {
     const customerRepo = AppDataSource.getRepository(Customer);
     const { name, email, phoneNumber, TimeCreate } = req.body;
-    if (!name || !phoneNumber || !TimeCreate) {
+    if (!name || !phoneNumber || !TimeCreate || !email) {
       return res.status(400).json({
         code: 400,
         message: messages.customerMissingNameAndPhoneNumber,
@@ -52,16 +57,23 @@ class CustomerService {
     }
 
     try {
-      const existingCustomer = await customerRepo.findOne({
+      const existingCustomerPhoneNumber = await customerRepo.findOne({
         where: { phoneNumber },
       });
 
-      if (existingCustomer) {
+      const existingCustomerEmail = await customerRepo.findOne({
+        where: { email },
+      });
+
+
+      if (existingCustomerPhoneNumber || existingCustomerEmail) {
         return res.status(400).json({
           code: 400,
           message: messages.findExistingCustomerWhenCreate,
         });
       }
+
+
 
       const customer = new Customer();
       customer.TimeCreate = TimeCreate;
@@ -69,11 +81,27 @@ class CustomerService {
       customer.email = email || null;
       customer.phoneNumber = phoneNumber;
       customer.isActive = true;
-
+      customer.password = customer.createPassword(generateRandomPassword(8));
+        const mail = {
+          to: email,
+          subject: 'Provide account for customer',
+          text: '',
+          html: htmlCreateAccount(email,customer.password),
+        };
+      // const result = await sendEmail(mail);
       await customerRepo.save(customer);
-      return res.status(200).json({ message: messages.createCustomerSuccessful });
+      // if (result) {
+      //   res.status(200).json(result);
+      // } else {
+      //   res.status(400);
+      //   throw new Error('Send verify code failed !'+result);
+      // }
+
+
+    
+      // return res.status(200).json({ message: messages.createCustomerSuccessful });
     } catch (error) {
-      return res.status(500).json({ error: messages.internalServerError });
+      return res.status(500).json({ error: messages.internalServerError + error});
     }
   }
 // GET_BY_ID

@@ -30,7 +30,8 @@
       "nodemon": "^2.0.20",
       "pg": "^8.4.0",
       "reflect-metadata": "^0.1.13",
-      "typeorm": "0.3.10"
+      "typeorm": "0.3.10",
+      "xoauth2": "^1.2.0"
    },
    "scripts": {
       "migration": "typeorm migration:create ./path-to-migrations-dir/PostRefactoring",

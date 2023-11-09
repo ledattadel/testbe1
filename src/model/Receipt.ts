@@ -18,10 +18,6 @@ export class Receipt {
   @Column({ nullable: true })
   TimeUpdate: string;
 
-
-  @Column()
-  VehicleStatus: string;
-
   @Column()
   Note: string;
 

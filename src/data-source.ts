@@ -18,7 +18,9 @@ import {
   RepairOrderDetail,
   Service,
   Supplier,
-  Vehicle
+  Vehicle,
+  
+  VehicleStatus
 } from './model';
 
 
@@ -26,14 +28,16 @@ import {
 
 export const AppDataSource = new DataSource({
   type: 'mysql',
-  host: 'mysql-152552-0.cloudclusters.net',
-  port: 14163,
+  host: 'mysql-153768-0.cloudclusters.net',
+  port: 17419,
   username: 'admin',
-  password: 'qBbTinYR',
+  password: 'aRO43aRQ',
   database: 'garage',
   synchronize: true,
   logging: false,
   entities: [
+    
+  VehicleStatus,
   Role,
   Staff,
   Customer,

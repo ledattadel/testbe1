@@ -17,6 +17,10 @@ export class VehicleStatus {
   @Column({ nullable: true })
   Condition: string;
 
+  
+  @Column({ nullable: true })
+  IsDone: boolean;
+
   @Column({ nullable: false, default: false })
   isTranferToPriceQuote: boolean;
 

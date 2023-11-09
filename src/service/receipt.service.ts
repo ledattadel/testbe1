@@ -1,5 +1,5 @@
 import { AppDataSource } from '../data-source';
-import { Receipt , Staff, Customer, Vehicle, Brand} from '../model'; // Đảm bảo bạn import model `Receipt`
+import { Receipt , Staff, Customer, Vehicle, Brand, VehicleStatus} from '../model'; // Đảm bảo bạn import model `Receipt`
 import messages from '../messageResponse.js';
 import {parseDateStringToDate, spitDateFromString, compareDateStrings, compare2DateBetweenStrings} from '../utils/support'
 class ReceiptService {
@@ -66,14 +66,15 @@ class ReceiptService {
         const customerRepo =  AppDataSource.getRepository(Customer);
         const vehicleRepo = AppDataSource.getRepository(Vehicle)
         const brandRepo = AppDataSource.getRepository(Brand);
+        const vehicleStatusRepo = AppDataSource.getRepository(VehicleStatus);
 
-      const {timeCreate, staffId, customerPhoneNumber, customerName, customerEmail, NumberPlateVehicle, TypeVehicle, ColorVehicle, EngineNumberVehicle, ChassisNumberVehicle, BrandNameVehicle , VehicleStatus ,Note 
+      const {timeCreate, staffId, customerPhoneNumber, customerName, email, NumberPlateVehicle, TypeVehicle, ColorVehicle, EngineNumberVehicle, ChassisNumberVehicle, BrandNameVehicle , vehicleStatus ,Note 
       }= req.body;
       
-      if (!timeCreate || !staffId || !customerPhoneNumber || !customerName  || !NumberPlateVehicle || !TypeVehicle || !ColorVehicle || !EngineNumberVehicle || !ChassisNumberVehicle || !BrandNameVehicle || !VehicleStatus ) {
+      if (!timeCreate || !staffId || !customerPhoneNumber || !customerName || !email || !NumberPlateVehicle || !TypeVehicle || !ColorVehicle || !EngineNumberVehicle || !ChassisNumberVehicle || !BrandNameVehicle || !vehicleStatus ) {
         return res.status(400).json({
           code: 400,
-          message: messages.missingReceiptFields,
+          message: messages.missingReceiptFields ,
         });
       }
 
@@ -88,7 +89,7 @@ class ReceiptService {
         const customer = new Customer();
         customer.TimeCreate = timeCreate
         customer.name = customerName;
-        customer.email = customerEmail || null;
+        customer.email = email || null;
         customer.phoneNumber = customerPhoneNumber;
         customer.isActive = true;
   
@@ -113,38 +114,47 @@ class ReceiptService {
         
 
           let brandId = null;
+          let newBrand = new Brand();
           if (existBrand) {
             brandId = existBrand.BrandID;
           }else{
-            let newBrand = new Brand();
+           
             newBrand.BrandName = BrandNameVehicle;
             newBrand.isActive = true;
             brandRepo.save(newBrand);
-            let findIdOfNewBrand = await brandRepo.findOne({
-              where:{BrandName: BrandNameVehicle}
-            })
-            brandId = findIdOfNewBrand.BrandID;
           }
     
-
-        vehicle.BrandId=brandId;
+        vehicle.BrandId=newBrand.BrandID;
         vehicle.isActive = true;
   
         await vehicleRepo.save(vehicle);
         newVehicle = await vehicleRepo.findOne({where: { NumberPlate: NumberPlateVehicle}})
 
       }
-
       const receipt = new Receipt();
       receipt.TimeCreate = timeCreate;
-      receipt.VehicleStatus = VehicleStatus;
       receipt.Note = Note;
       receipt.StaffID = staffId;
       receipt.CustomerID = newCustomer.CustomerID;
       receipt.VehicleID = newVehicle.VehicleID;
       receipt.isActive = true;
-
       await receiptRepo.save(receipt);
+
+      if (vehicleStatus) {
+        for (let index = 0; index < vehicleStatus.length; index++) {
+          let newVehicleStatus = new VehicleStatus();
+          newVehicleStatus.Condition = vehicleStatus[index].condition;
+          newVehicleStatus.IsDone = false;
+          newVehicleStatus.Name = vehicleStatus[index].name;
+          newVehicleStatus.TimeCreate = 'vehicleStatus[index].timeCreate';
+          newVehicleStatus.isTranferToPriceQuote = false;
+          newVehicleStatus.ReceiptId = receipt.ReceiptID;
+          // vehicleStatuses.push(newVehicleStatus);
+          vehicleStatusRepo.save(newVehicleStatus);
+        }
+      }
+      // receipt.vehicleStatuses = vehicleStatuses;
+
 
       return res.status(201).json({
         message: messages.createReceiptSuccessful,
@@ -256,7 +266,7 @@ class ReceiptService {
   
 
       receipt.TimeUpdate = TimeUpdate;
-      receipt.VehicleStatus = VehicleStatus || receipt.VehicleStatus;
+      // receipt.VehicleStatus = VehicleStatus || receipt.VehicleStatus;
       receipt.Note = Note || receipt.Note;
       receipt.editor = Editor;
   
