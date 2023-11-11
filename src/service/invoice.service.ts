@@ -2,7 +2,6 @@ import { Invoice, Staff } from '../model';
 import { AppDataSource } from '../data-source';
 import {parseDateStringToDate, spitDateFromString, compareDateStrings, compare2DateBetweenStrings, addDecimals, sumDecimalArray} from '../utils/support'
 import messages from '../messageResponse.js';
-import {Decimal} from 'decimal.js';
 
 class InvoiceService {
 

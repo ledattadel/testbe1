@@ -22,10 +22,4 @@ export class VehicleStatus {
   vehicleStatusReceipts: VehicleStatusReceipt[];
 
 
-  @OneToMany(() => PQProductDetail, (pqProductDetail) => pqProductDetail.vehicleStatus)
-  pqProductDetails: PQProductDetail[];
-
-
-  @OneToMany(() => PQServiceDetail, (pqServiceDetail) => pqServiceDetail.vehicleStatus)
-  pqServiceDetails: PQServiceDetail[];
 }

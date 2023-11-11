@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne , JoinColumn,OneToMany} from 'typeorm';
-import { PriceQuote , RepairOrderDetail} from './index';
+import { PriceQuote , RepairOrderDetail, VehicleStatusReceipt} from './index';
 import { Service, VehicleStatus } from './index';
 
 @Entity()
@@ -33,9 +33,9 @@ export class PQServiceDetail {
   service: Service;
 
   @Column({ nullable: true })
-  VehicleStatusID: number;
+  VehicleStatusReceiptID: number;
 
-  @ManyToOne(() => VehicleStatus, (vehicleStatus) => vehicleStatus.pqServiceDetails)
-  @JoinColumn({ name: 'VehicleStatusID' })
-  vehicleStatus: VehicleStatus;
+  @ManyToOne(() => VehicleStatusReceipt, (VehicleStatusReceipt) => VehicleStatusReceipt.pqServiceDetails)
+  @JoinColumn({ name: 'VehicleStatusReceiptID' })
+  VehicleStatusReceipt: VehicleStatusReceipt;
 }

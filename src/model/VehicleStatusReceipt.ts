@@ -34,4 +34,13 @@ export class VehicleStatusReceipt {
   @ManyToOne(() => Receipt, (receipt) => receipt.vehicleStatusReceipts)
   @JoinColumn({ name: 'ReceiptID' })
   receipt: Receipt;
+
+
+  
+  @OneToMany(() => PQProductDetail, (pqProductDetail) => pqProductDetail.vehicleStatusReceipt)
+  pqProductDetails: PQProductDetail[];
+
+
+  @OneToMany(() => PQServiceDetail, (pqServiceDetail) => pqServiceDetail.VehicleStatusReceipt)
+  pqServiceDetails: PQServiceDetail[];
 }
