@@ -59,9 +59,9 @@ class PriceQuoteService {
           "receipt.customer",
           "vehicleStatusReceipts.vehicleStatus",
 
-          "vehicleStatusReceipts.pqServiceDetails",
+          "vehicleStatusReceipts.pqServiceDetails.service",
 
-          "vehicleStatusReceipts.pqProductDetails",
+          "vehicleStatusReceipts.pqProductDetails.productDetail.product",
           "repairOrder",
         ],
       });
@@ -379,7 +379,8 @@ class PriceQuoteService {
                 updateVehicleStatus.ReceiptID = ReceiptID;
                 updateVehicleStatus.pqServiceDetails = pqServiceNewArr;
                 updateVehicleStatus.pqProductDetails = pqProductNewArr;
-
+                updateVehicleStatus.QuoteID = newPriceQuote.QuoteID;
+                newRepairOrder.priceQuote = newPriceQuote;
                 await vehicleStatusReceiptRepo.save(updateVehicleStatus);
                 vehicleStatusReceiptArr.push(updateVehicleStatus);
               } else {
