@@ -11,7 +11,6 @@ export class Service {
 
   @Column({ type: 'text' })
   Description: string;
-
     
   @Column({ nullable: false })
   isActive: boolean | null;

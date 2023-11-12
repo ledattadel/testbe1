@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn , OneToMany} from 'typeorm';
-import { PriceQuote , RepairOrderDetail } from './index';
+import { PriceQuote ,VehicleStatusReceipt } from './index';
 
 @Entity()
 export class RepairOrder {
@@ -22,7 +22,8 @@ export class RepairOrder {
   @JoinColumn({ name: 'QuoteID' })
   priceQuote: PriceQuote;
 
-  @OneToMany(() => RepairOrderDetail, (rod) => rod.repairOrder)
-  repairOrderDetails: RepairOrderDetail[];
+  @OneToMany(() => VehicleStatusReceipt, (vsr) => vsr.repairOrder)
+  VehicleStatusReceipts: VehicleStatusReceipt[];
+
 }
 

@@ -13,7 +13,6 @@ import { PurchaseOrder } from './PurchaseOrder';
 import { PurchaseOrderDetail } from './PurchaseOrderDetail';
 import { Receipt } from './Receipt';
 import { RepairOrder } from './RepairOrder';
-import { RepairOrderDetail } from './RepairOrderDetail';
 import { Service } from './Service';
 import { Supplier } from './Supplier';
 import { Vehicle } from './Vehicle';
@@ -35,7 +34,6 @@ export {
   PurchaseOrderDetail,
   Receipt,
   RepairOrder,
-  RepairOrderDetail,
   Service,
   Supplier,
   Vehicle,

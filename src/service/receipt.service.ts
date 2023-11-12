@@ -155,11 +155,12 @@ class ReceiptService {
             });
           }
           vehicleStatusReceipt.Condition = vehicleStatus[index].condition;
-          vehicleStatusReceipt.IsDone = false;
+          vehicleStatusReceipt.IsRepairDone = false;
           vehicleStatusReceipt.isTranferToPriceQuote = false;
           vehicleStatusReceipt.TimeCreate = timeCreate;
           vehicleStatusReceipt.VehicleStatusID = vehicleStatusExist.ID;
           vehicleStatusReceipt.ReceiptID=receipt.ReceiptID;
+          vehicleStatusReceipt.RepairOrderID = null;
           VehicleStatusReceiptRepo.save(vehicleStatusReceipt);  
         }
       }

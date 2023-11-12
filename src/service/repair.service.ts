@@ -1,4 +1,4 @@
-import { Brand, RepairOrderDetail } from '../model';
+import { Brand } from '../model';
 import { AppDataSource } from '../data-source';
 import { RepairOrder } from '../model/index';
 import messages from '../messageResponse.js'
@@ -71,7 +71,7 @@ class RepairService {
             where: { RepairOrderID: repairOrderId }     
           });
           const repairOrderRepo = AppDataSource.getRepository(RepairOrder);
-          const repairOrderDetailRepo =  AppDataSource.getRepository(RepairOrderDetail);
+          // const repairOrderDetailRepo =  AppDataSource.getRepository(RepairOrderDetail);
           if (!repairOrder) {
             return res.status(404).json({ message: messages.notFound });
           }
@@ -79,18 +79,18 @@ class RepairService {
         const { RepairOrderID, priceQuoteServiceDetails } = req.body;
         let isAllDone =  true;  
            
-        for (const repairElement of priceQuoteServiceDetails) {
-            let repairOrderElementQuery = await AppDataSource.getRepository(RepairOrderDetail).findOne({
-                where: { RODID: repairElement.RODID }     
-            });
-            repairOrderElementQuery.IsDone = repairElement.IsDone             
-            repairOrderDetailRepo.save(repairOrderElementQuery);
-            if (repairElement.IsDone === false) {
-                isAllDone = false;
-            }
+        // for (const repairElement of priceQuoteServiceDetails) {
+        //     let repairOrderElementQuery = await AppDataSource.getRepository(RepairOrderDetail).findOne({
+        //         where: { RODID: repairElement.RODID }     
+        //     });
+        //     repairOrderElementQuery.IsDone = repairElement.IsDone             
+        //     repairOrderDetailRepo.save(repairOrderElementQuery);
+        //     if (repairElement.IsDone === false) {
+        //         isAllDone = false;
+        //     }
 
 
-        }
+        // }
 
         if (isAllDone) {
             repairOrder.IsDone = true;

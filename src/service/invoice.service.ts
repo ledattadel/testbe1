@@ -32,27 +32,29 @@ class InvoiceService {
     let totalPriceService = 0;
     
 
-    filteredData.forEach(item => {
-    if (item.priceQuote.priceQuoteProductDetails) {
-        item.priceQuote.priceQuoteProductDetails.forEach(productDetail => {
-            totalPurchasePricesProduct += productDetail.PurchasePrice*productDetail.Quantity;
-            totalSellingPricesProduct += productDetail.SellingPrice*productDetail.Quantity;
-        });
-    }
-    if (item.priceQuote.priceQuoteServiceDetails) {
-      item.priceQuote.priceQuoteServiceDetails.forEach(serviceItem =>{
-        totalPriceService+=serviceItem.Price;
-      })
-    }
-  });
+    // filteredData.forEach(item => {
+    // if (item.priceQuote.vehicleStatusReceipts) {
+    //     item.priceQuote.priceQuoteProductDetails.forEach(productDetail => {
+    //         totalPurchasePricesProduct += productDetail.PurchasePrice*productDetail.Quantity;
+    //         totalSellingPricesProduct += productDetail.SellingPrice*productDetail.Quantity;
+    //     });
+    // }
+    // if (item.priceQuote.priceQuoteServiceDetails) {
+    //   item.priceQuote.priceQuoteServiceDetails.forEach(serviceItem =>{
+    //     totalPriceService+=serviceItem.Price;
+    //   })
+  //   }
+  // });
 
 
-      return res.json({
+      return res.json(
+        {
         total: filteredData.length,
         totalPurchasePricesProduct:totalPurchasePricesProduct,
         totalSellingPricesProduct:totalSellingPricesProduct,
         totalPriceService:totalPriceService,
-        invoices:filteredData});
+        invoices:filteredData}
+        );
     } catch (error) {
       return res.status(500).json({ error: messages.internalServerError + error});
     }

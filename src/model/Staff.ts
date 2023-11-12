@@ -10,7 +10,7 @@ import {
 } from 'typeorm';
 
 import { PriceQuote, Receipt } from './index';
-import { RepairOrderDetail } from './index';
+import { VehicleStatusReceipt } from './index';
 import { Role } from  './index';
 var jwt = require('jsonwebtoken');
 var bcrypt = require('bcrypt');
@@ -61,9 +61,8 @@ export class Staff {
   @OneToMany(() => Receipt, (receipt) => receipt.staff)
   receipts: Receipt[];
 
-  @OneToMany(() => RepairOrderDetail, (rod) => rod.staff)
-  repairOrderDetails: RepairOrderDetail[];
-  
+  @OneToMany(() => VehicleStatusReceipt, (rod) => rod.staff)
+  VehicleStatusTechnician: VehicleStatusReceipt[];
 
   
   @OneToMany(() => PriceQuote, (priceQuote) => priceQuote.staff)

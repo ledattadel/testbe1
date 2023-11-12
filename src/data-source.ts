@@ -15,7 +15,6 @@ import {
   PurchaseOrderDetail,
   Receipt,
   RepairOrder,
-  RepairOrderDetail,
   Service,
   Supplier,
   Vehicle,
@@ -52,7 +51,6 @@ export const AppDataSource = new DataSource({
   PurchaseOrderDetail,
   Receipt,
   RepairOrder,
-  RepairOrderDetail,
   Service,
   Supplier,
   Vehicle

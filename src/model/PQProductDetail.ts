@@ -6,11 +6,8 @@ import { ProductDetail, VehicleStatus, VehicleStatusReceipt } from './index';
 export class PQProductDetail {
   @PrimaryGeneratedColumn()
   PDID: number;
-  
-  @Column({ nullable: true })
-  QuoteID: number;
 
-
+ 
   @Column()
   SellingPrice: number;
 
@@ -25,12 +22,8 @@ export class PQProductDetail {
   @Column()
   Quantity: number;
 
-  @ManyToOne(() => PriceQuote, (pq) => pq.priceQuoteProductDetails)
-  // @JoinColumn({ name: 'QuoteID' })
-  priceQuote: PriceQuote;
 
   @ManyToOne(() => ProductDetail, (pd) => pd.priceQuoteProductDetail)
-  // @JoinColumn({ name: 'PDID' })
   productDetail: ProductDetail;
 
 

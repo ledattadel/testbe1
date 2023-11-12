@@ -3,12 +3,8 @@ import { AppDataSource } from '../data-source';
 import {parseDateStringToDate, spitDateFromString, compareDateStrings, compare2DateBetweenStrings, generateRandomPassword} from '../utils/support'
 import { Customer } from '../model/index';
 import messages from '../messageResponse.js'
-import { sendEmail,
-  htmlCreateAccount,
-  htmlResetPassword,
-  htmlWarningLogin,
-  htmlBill,
-  htmlCancelOrder} from '../utils/mail.config.js'
+import {sendMail, htmlSignupAccount} from '../utils/mail.config.js'
+import { log } from 'console';
 class CustomerService {
 
 
@@ -66,40 +62,49 @@ class CustomerService {
       });
 
 
-      if (existingCustomerPhoneNumber || existingCustomerEmail) {
+      if (existingCustomerPhoneNumber ) {
         return res.status(400).json({
           code: 400,
           message: messages.findExistingCustomerWhenCreate,
         });
       }
 
+      if (existingCustomerEmail) {
+        return res.status(400).json({
+          code: 400,
+          message: 'Một khách hàng trùng email đã tồn tại',
+        });
+      }
 
 
+
+      const password = generateRandomPassword(8);
       const customer = new Customer();
       customer.TimeCreate = TimeCreate;
       customer.name = name;
       customer.email = email || null;
       customer.phoneNumber = phoneNumber;
       customer.isActive = true;
-      customer.password = customer.createPassword(generateRandomPassword(8));
+      customer.password = customer.createPassword(password);
         const mail = {
           to: email,
           subject: 'Provide account for customer',
           text: '',
-          html: htmlCreateAccount(email,customer.password),
+          html: htmlSignupAccount(phoneNumber, password),
         };
-      // const result = await sendEmail(mail);
+
+        // sendMail(mail);
+      try {
+        const result = sendMail(mail);
+
+      } catch (error) {
+        return res.status(400).json({ message: 'Send verify code failed !' });
+      }  
       await customerRepo.save(customer);
-      // if (result) {
-      //   res.status(200).json(result);
-      // } else {
-      //   res.status(400);
-      //   throw new Error('Send verify code failed !'+result);
-      // }
 
 
     
-      // return res.status(200).json({ message: messages.createCustomerSuccessful });
+      return res.status(200).json({ message: messages.createCustomerSuccessful });
     } catch (error) {
       return res.status(500).json({ error: messages.internalServerError + error});
     }
