@@ -32,8 +32,7 @@ export class PriceQuote {
   TimeUpdate: string;
 
 
-  @Column()
-  ReceiptID: number;
+  
 
   @Column({ nullable: false })
   isActive: boolean | null;
@@ -43,8 +42,11 @@ export class PriceQuote {
   @JoinColumn({ name: 'StaffID' })
   staff: Staff;
 
+  @Column()
+  ReceiptID: number;
+
   @ManyToOne(() => Receipt, (receipt: any) => receipt.priceQuotes)
-  // @JoinColumn({ name: 'ReceiptID' })
+  @JoinColumn({ name: 'ReceiptID' })
   receipt: Receipt;
 
   @OneToOne(() => RepairOrder, (ro) => ro.priceQuote)

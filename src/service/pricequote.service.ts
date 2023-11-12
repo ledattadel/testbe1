@@ -57,11 +57,11 @@ class PriceQuoteService {
           "receipt",
           "receipt.vehicle",
           "receipt.customer",
-          "priceQuoteServiceDetails",
-          "priceQuoteServiceDetails.service",
-          "priceQuoteServiceDetails.repairOrderDetails.staff",
-          "priceQuoteProductDetails.productDetail.product.brand",
-          "priceQuoteProductDetails.productDetail.supplier",
+          "vehicleStatusReceipts.vehicleStatus",
+
+          "vehicleStatusReceipts.pqServiceDetails",
+
+          "vehicleStatusReceipts.pqProductDetails",
           "repairOrder",
         ],
       });
@@ -284,13 +284,11 @@ class PriceQuoteService {
       const existPriceQuote = await priceQuoteRepository.findOne({
         where: { ReceiptID: ReceiptID },
       });
-
-      // if (existPriceQuote) {
-      //   return res.status(400).json({
-      //     code: 400,
-      //     message: `PriceQuote exist !!!`,
-      //   });
-      // }
+      if (existPriceQuote) {
+        return res.status(500).json({
+          error: `Exist PriceQuote`,
+        });
+      }
 
       const newPriceQuote = new PriceQuote();
       newPriceQuote.Status = Status;
@@ -326,13 +324,12 @@ class PriceQuoteService {
             let pqProductNewArr = [];
 
             if (vehicleStatusReceiptExist) {
-              let pqServiceArr = vehicleStatusElement.pqService || [];;
+              let pqServiceArr = vehicleStatusElement.pqService || [];
               for (const priceQuoteServiceElement of pqServiceArr) {
                 let newPQService = new PQServiceDetail();
                 newPQService.Price = priceQuoteServiceElement.Price;
                 newPQService.ServiceID = priceQuoteServiceElement.ServiceID;
-                newPQService.VehicleStatusReceiptID =
-                  vehicleStatusReceiptExist.ID;
+                newPQService.VehicleStatusReceipt = vehicleStatusElement;
                 try {
                   await PQServiceDetailRepository.save(newPQService);
                 } catch (error) {
@@ -345,7 +342,7 @@ class PriceQuoteService {
 
               // Bắt lỗi cho phần tạo PriceQuoteProductDetails
               try {
-                let pqProductArr = vehicleStatusElement.pqProduct || [];;
+                let pqProductArr = vehicleStatusElement.pqProduct || [];
                 for (const priceQuoteProductElement of pqProductArr) {
                   let newPQProduct = new PQProductDetail();
 
@@ -355,7 +352,7 @@ class PriceQuoteService {
                     priceQuoteProductElement.PurchasePrice;
                   newPQProduct.Quantity = priceQuoteProductElement.Quantity;
                   newPQProduct.isAcceptedRepair = CheckAcceptedRepair;
-
+                  newPQProduct.vehicleStatusReceipt = vehicleStatusElement;
                   let productDetail = await productDetailRepo.findOne({
                     where: {
                       ProductDetailID: priceQuoteProductElement.productDetailID,
@@ -372,11 +369,29 @@ class PriceQuoteService {
                 });
               }
             }
-            vehicleStatusReceiptExist.ReceiptID = ReceiptID;
-            vehicleStatusReceiptExist.pqServiceDetails = pqServiceNewArr;
-            vehicleStatusReceiptExist.pqProductDetails = pqProductNewArr;
-            vehicleStatusReceiptRepo.save(vehicleStatusReceiptExist);
-            vehicleStatusReceiptArr.push(vehicleStatusReceiptExist);
+            try {
+              const updateVehicleStatus =
+                await vehicleStatusReceiptRepo.findOne({
+                  where: { ID: vehicleStatusElement.ID },
+                });
+
+              if (updateVehicleStatus) {
+                updateVehicleStatus.ReceiptID = ReceiptID;
+                updateVehicleStatus.pqServiceDetails = pqServiceNewArr;
+                updateVehicleStatus.pqProductDetails = pqProductNewArr;
+
+                await vehicleStatusReceiptRepo.save(updateVehicleStatus);
+                vehicleStatusReceiptArr.push(updateVehicleStatus);
+              } else {
+                return res.status(500).json({
+                  error:  `Error: Vehicle status receipt with ID ${vehicleStatusElement.ID} not found.`
+                });
+              }
+            } catch (error) {
+              return res.status(500).json({
+                error: `Error while updating Vehicle Status: ${error}`,
+              });
+            }
           }
           const getPriceQuote = await priceQuoteRepository.findOne({
             where: { QuoteID: newPriceQuote.QuoteID },

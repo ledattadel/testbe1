@@ -96,7 +96,6 @@ class CustomerService {
         // sendMail(mail);
       try {
         const result = sendMail(mail);
-
       } catch (error) {
         return res.status(400).json({ message: 'Send verify code failed !' });
       }  
