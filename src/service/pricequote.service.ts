@@ -61,7 +61,7 @@ class PriceQuoteService {
 
           "vehicleStatusReceipts.pqServiceDetails.service",
 
-          "vehicleStatusReceipts.pqProductDetails.productDetail.product",
+          "vehicleStatusReceipts.pqProductDetails.productDetail.product.brand",
           "repairOrder",
         ],
       });
