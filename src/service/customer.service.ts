@@ -1,7 +1,7 @@
 import { getRepository } from 'typeorm';
 import { AppDataSource } from '../data-source';
 import {parseDateStringToDate, spitDateFromString, compareDateStrings, compare2DateBetweenStrings, generateRandomPassword} from '../utils/support'
-import { Customer } from '../model/index';
+import { Customer, PriceQuote, Receipt } from '../model/index';
 import messages from '../messageResponse.js'
 import {sendMail, htmlSignupAccount} from '../utils/mail.config.js'
 import { log } from 'console';
@@ -9,7 +9,7 @@ import { isEmptyObject, error, success } from '../util';
 
 class CustomerService {
 
-
+  
 
   async getTotalCustomersByTimeRange(req, res) {
     try {
@@ -225,13 +225,38 @@ async getById(req, res) {
       });
     }
     const validPassword = account.comparePassword(password);
+    const getAllReceipts = await AppDataSource.getRepository(Receipt).find({ where: { CustomerID: account.CustomerID } });
+    let priceQuoteArr = [];
+    for (const receipt of getAllReceipts) {
+      const priceQuote = await AppDataSource.getRepository(PriceQuote).findOne({ where: { ReceiptID: receipt.ReceiptID } });
+ 
+    if (priceQuote) {
+      const priceQuoteFound = await AppDataSource.getRepository(PriceQuote).findOne({
+        where: { QuoteID: priceQuote.QuoteID, isActive: true },
+        relations: [
+          "staff",
+          "receipt.vehicle",
+          "receipt.customer",
+          "vehicleStatusReceipts.vehicleStatus",
+
+          "vehicleStatusReceipts.pqServiceDetails.service",
+
+          "vehicleStatusReceipts.pqProductDetails.productDetail.product.brand",
+          "repairOrder",
+        ],
+      });
+      priceQuoteArr.push(priceQuoteFound);
+    }
+    }
+
+
     if (!validPassword) {
       return res.status(500).json({
         message: messages.wrongPasswordWhenSignIn,
       });
     }else{
       return res.status(200).json({
-        message: { info: account },
+        message: { info: account , priceQuote: priceQuoteArr},
       });
     }
     
