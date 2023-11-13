@@ -51,6 +51,9 @@ export class VehicleStatusReceipt {
   @JoinColumn({ name: "VehicleStatusID" })
   vehicleStatus: VehicleStatus;
 
+
+  
+
   @Column({ nullable: true })
   ReceiptID: number;
 

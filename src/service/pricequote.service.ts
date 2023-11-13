@@ -242,122 +242,119 @@ class PriceQuoteService {
   //
 
   async create(req, res) {
-    const {
-      Status,
-      Time,
-      StaffID,
-      ReceiptID,
-      vehicleStatus
-    } = req.body;
-  
-    const requiredFields = ["Status", "Time", "StaffID", "ReceiptID", "vehicleStatus"];
-    const missingFields = requiredFields.filter(field => !req.body.hasOwnProperty(field));
-  
+    const { Status, Time, StaffID, ReceiptID, vehicleStatus } = req.body;
+    const requiredFields = [
+      "Status",
+      "Time",
+      "StaffID",
+      "ReceiptID",
+      "vehicleStatus",
+    ];
+    const missingFields = requiredFields.filter(
+      (field) => !req.body.hasOwnProperty(field)
+    );
+
     if (missingFields.length > 0) {
       return res.status(400).json({
         code: 400,
         message: `Missing fields: ${missingFields.join(", ")}`,
       });
     }
-  
+
     let CheckAcceptedRepair = Status === 1;
-  
+
     try {
       const priceQuoteRepository = AppDataSource.getRepository(PriceQuote);
       const receiptRepository = AppDataSource.getRepository(Receipt);
-      const PQProductDetailRepository = AppDataSource.getRepository(PQProductDetail);
-      const PQServiceDetailRepository = AppDataSource.getRepository(PQServiceDetail);
+      const PQProductDetailRepository =
+        AppDataSource.getRepository(PQProductDetail);
+      const PQServiceDetailRepository =
+        AppDataSource.getRepository(PQServiceDetail);
       const repairOrderRepo = AppDataSource.getRepository(RepairOrder);
-      const vehicleStatusReceiptRepo = AppDataSource.getRepository(VehicleStatusReceipt);
+      const vehicleStatusReceiptRepo =
+        AppDataSource.getRepository(VehicleStatusReceipt);
       const productDetailRepo = AppDataSource.getRepository(ProductDetail);
-  
+
       const existPriceQuote = await priceQuoteRepository.findOne({
         where: { ReceiptID: ReceiptID },
       });
-  
+
       if (existPriceQuote) {
         return res.status(500).json({
           error: `Exist PriceQuote`,
         });
       }
-  
+
       const newPriceQuote = new PriceQuote();
       newPriceQuote.Status = Status;
       newPriceQuote.ReceiptID = ReceiptID;
       newPriceQuote.Time = Time;
       newPriceQuote.StaffID = StaffID;
       newPriceQuote.isActive = true;
-  
+
       const existReceipt = await receiptRepository.findOne({
         where: { ReceiptID: ReceiptID },
       });
-  
+    
       newPriceQuote.receipt = existReceipt;
-  
-      await priceQuoteRepository.save(newPriceQuote);
-  
+
       const newRepairOrder = new RepairOrder();
       newRepairOrder.IsDone = false;
-      newRepairOrder.QuoteID = newPriceQuote.QuoteID;
       newRepairOrder.priceQuote = newPriceQuote;
-  
+
+      await priceQuoteRepository.save(newPriceQuote);
       await repairOrderRepo.save(newRepairOrder);
-  
+
       let vehicleStatusReceiptArr = [];
-  
+
       for (const vehicleStatusElement of vehicleStatus) {
-        let vehicleStatusReceiptExist = await vehicleStatusReceiptRepo.findOne({
-          where: { ID: vehicleStatusElement.ID },
-        });
-  
         let pqServiceNewArr = [];
         let pqProductNewArr = [];
-  
-        if (vehicleStatusReceiptExist) {
-          let pqServiceArr = vehicleStatusElement.pqService || [];
-  
-          for (const priceQuoteServiceElement of pqServiceArr) {
-            let newPQService = new PQServiceDetail();
-            newPQService.Price = priceQuoteServiceElement.Price;
-            newPQService.ServiceID = priceQuoteServiceElement.ServiceID;
-            newPQService.VehicleStatusReceipt = vehicleStatusElement;
-            await PQServiceDetailRepository.save(newPQService);
-            pqServiceNewArr.push(newPQService);
-          }
-  
-          let pqProductArr = vehicleStatusElement.pqProduct || [];
-  
-          for (const priceQuoteProductElement of pqProductArr) {
-            let newPQProduct = new PQProductDetail();
-            newPQProduct.SellingPrice = priceQuoteProductElement.SellingPrice;
-            newPQProduct.PurchasePrice = priceQuoteProductElement.PurchasePrice;
-            newPQProduct.Quantity = priceQuoteProductElement.Quantity;
-            newPQProduct.isAcceptedRepair = CheckAcceptedRepair;
-            newPQProduct.vehicleStatusReceipt = vehicleStatusElement;
-  
-            let productDetail = await productDetailRepo.findOne({
-              where: {
-                ProductDetailID: priceQuoteProductElement.productDetailID,
-                isActive: true,
-              },
-            });
-  
-            newPQProduct.productDetail = productDetail;
-            await PQProductDetailRepository.save(newPQProduct);
-            pqProductNewArr.push(newPQProduct);
-          }
+
+        let pqServiceArr = vehicleStatusElement.pqService || [];
+
+        for (const priceQuoteServiceElement of pqServiceArr) {
+          let newPQService = new PQServiceDetail();
+          newPQService.Price = priceQuoteServiceElement.Price;
+          newPQService.ServiceID = priceQuoteServiceElement.ServiceID;
+          newPQService.VehicleStatusReceipt = vehicleStatusElement;
+          await PQServiceDetailRepository.save(newPQService);
+          pqServiceNewArr.push(newPQService);
         }
-  
+
+        let pqProductArr = vehicleStatusElement.pqProduct || [];
+
+        for (const priceQuoteProductElement of pqProductArr) {
+          let newPQProduct = new PQProductDetail();
+          newPQProduct.SellingPrice = priceQuoteProductElement.SellingPrice;
+          newPQProduct.PurchasePrice = priceQuoteProductElement.PurchasePrice;
+          newPQProduct.Quantity = priceQuoteProductElement.Quantity;
+          newPQProduct.isAcceptedRepair = CheckAcceptedRepair;
+          newPQProduct.vehicleStatusReceipt = vehicleStatusElement;
+
+          let productDetail = await productDetailRepo.findOne({
+            where: {
+              ProductDetailID: priceQuoteProductElement.productDetailID,
+              isActive: true,
+            },
+          });
+
+          newPQProduct.productDetail = productDetail;
+          await PQProductDetailRepository.save(newPQProduct);
+          pqProductNewArr.push(newPQProduct);
+        }
+
         const updateVehicleStatus = await vehicleStatusReceiptRepo.findOne({
           where: { ID: vehicleStatusElement.ID },
         });
-  
+
         if (updateVehicleStatus) {
           updateVehicleStatus.ReceiptID = ReceiptID;
           updateVehicleStatus.pqServiceDetails = pqServiceNewArr;
           updateVehicleStatus.pqProductDetails = pqProductNewArr;
+          updateVehicleStatus.isTranferToPriceQuote = true;
           updateVehicleStatus.QuoteID = newPriceQuote.QuoteID;
-          newRepairOrder.priceQuote = newPriceQuote;
+          updateVehicleStatus.RepairOrderID = newRepairOrder.RepairOrderID;
           await vehicleStatusReceiptRepo.save(updateVehicleStatus);
           vehicleStatusReceiptArr.push(updateVehicleStatus);
         } else {
@@ -366,21 +363,9 @@ class PriceQuoteService {
           });
         }
       }
-  
-      const getPriceQuote = await priceQuoteRepository.findOne({
-        where: { QuoteID: newPriceQuote.QuoteID },
-      });
-  
-      getPriceQuote.vehicleStatusReceipts = vehicleStatusReceiptArr;
-      await priceQuoteRepository.save(getPriceQuote);
-  
-      const getRepairOrder = await repairOrderRepo.findOne({
-        where: { RepairOrderID: newRepairOrder.RepairOrderID },
-      });
-  
-      getRepairOrder.VehicleStatusReceipts = vehicleStatusReceiptArr;
-      await repairOrderRepo.save(getRepairOrder);
-  
+
+     
+
       return res.status(201).json({
         message: "Tao phieu bao gia thanh cong",
       });
@@ -390,7 +375,6 @@ class PriceQuoteService {
       });
     }
   }
-  
 
   async update(req, res) {
     try {
