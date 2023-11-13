@@ -298,18 +298,16 @@ class PriceQuoteService {
     
       newPriceQuote.receipt = existReceipt;
 
-      const newRepairOrder = new RepairOrder();
-      newRepairOrder.IsDone = false;
-      newRepairOrder.priceQuote = newPriceQuote;
+      // const newRepairOrder = new RepairOrder();
+      // newRepairOrder.IsDone = false;
+      // newRepairOrder.priceQuote = newPriceQuote;
 
       await priceQuoteRepository.save(newPriceQuote);
-      await repairOrderRepo.save(newRepairOrder);
+      // await repairOrderRepo.save(newRepairOrder);
 
-      let vehicleStatusReceiptArr = [];
 
       for (const vehicleStatusElement of vehicleStatus) {
-        let pqServiceNewArr = [];
-        let pqProductNewArr = [];
+
 
         let pqServiceArr = vehicleStatusElement.pqService || [];
 
@@ -319,7 +317,6 @@ class PriceQuoteService {
           newPQService.ServiceID = priceQuoteServiceElement.ServiceID;
           newPQService.VehicleStatusReceipt = vehicleStatusElement;
           await PQServiceDetailRepository.save(newPQService);
-          pqServiceNewArr.push(newPQService);
         }
 
         let pqProductArr = vehicleStatusElement.pqProduct || [];
@@ -341,7 +338,6 @@ class PriceQuoteService {
 
           newPQProduct.productDetail = productDetail;
           await PQProductDetailRepository.save(newPQProduct);
-          pqProductNewArr.push(newPQProduct);
         }
 
         const updateVehicleStatus = await vehicleStatusReceiptRepo.findOne({
@@ -350,13 +346,10 @@ class PriceQuoteService {
 
         if (updateVehicleStatus) {
           updateVehicleStatus.ReceiptID = ReceiptID;
-          updateVehicleStatus.pqServiceDetails = pqServiceNewArr;
-          updateVehicleStatus.pqProductDetails = pqProductNewArr;
           updateVehicleStatus.isTranferToPriceQuote = true;
           updateVehicleStatus.QuoteID = newPriceQuote.QuoteID;
-          updateVehicleStatus.RepairOrderID = newRepairOrder.RepairOrderID;
+          // updateVehicleStatus.RepairOrderID = newRepairOrder.RepairOrderID;
           await vehicleStatusReceiptRepo.save(updateVehicleStatus);
-          vehicleStatusReceiptArr.push(updateVehicleStatus);
         } else {
           return res.status(500).json({
             error: `Error: Vehicle status receipt with ID ${vehicleStatusElement.ID} not found.`,
@@ -376,6 +369,56 @@ class PriceQuoteService {
     }
   }
 
+  async startRepair(req, res) {
+    try {
+      const priceQuoteRepository = AppDataSource.getRepository(PriceQuote);
+      const receiptRepository = AppDataSource.getRepository(Receipt);
+      const PQProductDetailRepository =
+        AppDataSource.getRepository(PQProductDetail);
+      const PQServiceDetailRepository =
+        AppDataSource.getRepository(PQServiceDetail);
+      const serviceRepository = AppDataSource.getRepository(Service);
+      const productDetailRepo = AppDataSource.getRepository(ProductDetail);
+      const repairOrderRepo = AppDataSource.getRepository(RepairOrder);   
+      const vehicleStatusReceiptRepo =
+      AppDataSource.getRepository(VehicleStatusReceipt);
+
+      const { id } = req.params;
+      const existingPriceQuote = await priceQuoteRepository.findOne({
+        where: { QuoteID: id },
+      });
+
+      if (!existingPriceQuote) {
+        return res.status(404).json({
+          code: 404,
+          message: "Không tìm thấy phieu bao gia cần sửa chữa." + id,
+        });
+      }
+
+      let vehicleStatusReceipts = await vehicleStatusReceiptRepo.find({where:{QuoteID: id}});
+      let repairOrder = new RepairOrder();
+      repairOrder.IsDone = false;
+      repairOrder.priceQuote = existingPriceQuote;
+      await repairOrderRepo.save(repairOrder);
+
+      for (const vehicleStatusReceipt of vehicleStatusReceipts) {
+         vehicleStatusReceipt.IsRepairDone = false;
+         vehicleStatusReceipt.IsAcceptedRepair = true;
+         vehicleStatusReceipt.isTranferToRepairOrder = true;
+         vehicleStatusReceipt.RepairOrderID = repairOrder.RepairOrderID; 
+        await vehicleStatusReceiptRepo.save(vehicleStatusReceipt);
+      }
+      return res.status(201).json({
+        message: "tạo lệnh sửa chữa thành công",
+      });
+
+    } catch (error) {
+      return res.status(500).json({
+        error: messages.internalServerError + error,
+      });
+    }
+  }
+
   async update(req, res) {
     try {
       const priceQuoteRepository = AppDataSource.getRepository(PriceQuote);
@@ -386,7 +429,9 @@ class PriceQuoteService {
         AppDataSource.getRepository(PQServiceDetail);
       const serviceRepository = AppDataSource.getRepository(Service);
       const productDetailRepo = AppDataSource.getRepository(ProductDetail);
-      const repairOrderRepo = AppDataSource.getRepository(RepairOrder);
+      const repairOrderRepo = AppDataSource.getRepository(RepairOrder);   
+      const vehicleStatusReceiptRepo =
+      AppDataSource.getRepository(VehicleStatusReceipt);
 
       const { id } = req.params;
 
@@ -394,17 +439,14 @@ class PriceQuoteService {
         Status,
         TimeUpdate,
         EditorID,
-        priceQuoteServiceDetails,
-        priceQuoteProductDetails,
-        TimeCreateRepair,
+        vehicleStatus
       } = req.body;
 
       const requiredFields = [
         "Status",
         "TimeUpdate",
         "EditorID",
-        "priceQuoteServiceDetails",
-        "priceQuoteProductDetails",
+        "vehicleStatus",
       ];
 
       const missingFields = requiredFields.filter(
@@ -433,6 +475,71 @@ class PriceQuoteService {
       existingPriceQuote.Editor = EditorID;
       existingPriceQuote.TimeUpdate = TimeUpdate;
 
+      let arrIDVehicleStatusElement = [];
+      for (const vehicleStatusElement of vehicleStatus) {
+        arrIDVehicleStatusElement.push(vehicleStatusElement.ID);
+  
+        let pqServiceArr = vehicleStatusElement.pqService || [];
+        // delete all pqServiceDetail
+        await PQServiceDetailRepository.delete({ VehicleStatusReceipt: vehicleStatusElement.ID });
+        await PQProductDetailRepository.delete({ vehicleStatusReceipt: vehicleStatusElement.ID });
+        // delete all pqProductDetail
+        
+  
+        for (const priceQuoteServiceElement of pqServiceArr) {
+          let newPQService = new PQServiceDetail();
+          newPQService.Price = priceQuoteServiceElement.Price;
+          newPQService.ServiceID = priceQuoteServiceElement.ServiceID;
+          newPQService.VehicleStatusReceipt = vehicleStatusElement;
+          await PQServiceDetailRepository.save(newPQService);
+        }
+  
+        let pqProductArr = vehicleStatusElement.pqProduct || [];
+  
+        for (const priceQuoteProductElement of pqProductArr) {
+          let newPQProduct = new PQProductDetail();
+          newPQProduct.SellingPrice = priceQuoteProductElement.SellingPrice;
+          newPQProduct.PurchasePrice = priceQuoteProductElement.PurchasePrice;
+          newPQProduct.Quantity = priceQuoteProductElement.Quantity;
+          newPQProduct.vehicleStatusReceipt = vehicleStatusElement;
+  
+          let productDetail = await productDetailRepo.findOne({
+            where: {
+              ProductDetailID: priceQuoteProductElement.productDetailID,
+              isActive: true,
+            },
+          });
+  
+          newPQProduct.productDetail = productDetail;
+          await PQProductDetailRepository.save(newPQProduct);
+        }
+  
+        const updateVehicleStatus = await vehicleStatusReceiptRepo.findOne({
+          where: { ID: vehicleStatusElement.ID },
+        });
+  
+        if (updateVehicleStatus) {
+          updateVehicleStatus.ReceiptID = existingPriceQuote.ReceiptID;
+          updateVehicleStatus.isTranferToPriceQuote = true;
+          await vehicleStatusReceiptRepo.save(updateVehicleStatus);
+        } else {
+          return res.status(500).json({
+            error: `Error: Vehicle status receipt with ID ${vehicleStatusElement.ID} not found.`,
+          });
+        }
+      }
+
+       let VehicleNotInPriceQuoteButInReceipt =  await vehicleStatusReceiptRepo.find({ where:{QuoteID: id } });
+        for (const vehicleStatusReceipt of VehicleNotInPriceQuoteButInReceipt) {
+          if (!arrIDVehicleStatusElement.includes(vehicleStatusReceipt.ID)) {
+            vehicleStatusReceipt.QuoteID = null;
+            vehicleStatusReceipt.isTranferToPriceQuote = false;
+            await vehicleStatusReceiptRepo.save(vehicleStatusReceipt);
+          }
+       }
+
+
+
       await priceQuoteRepository.save(existingPriceQuote);
 
       return res.status(201).json({
@@ -444,6 +551,8 @@ class PriceQuoteService {
       });
     }
   }
+
+
 }
 
 export default new PriceQuoteService();
