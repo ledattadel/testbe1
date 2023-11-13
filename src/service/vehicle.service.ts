@@ -59,6 +59,7 @@ class VehicleService {
       }
     }
 
+    // api/vehicle/numberplate/:id
     async getByNumberPlate(req, res) {
       try {
         const NumberPlate = req.params.id;
@@ -67,16 +68,17 @@ class VehicleService {
             'brand'
           ]});
   
-        if (!vehicle) {
-          return res.status(404).json({ message: messages.notFound });
-        }
-  
+          if (!vehicle) {
+            return res.status(404).json({ code: 404, message: "Không tìm thấy thông tin xe" });
+          }
+
         return res.json(vehicle);
       } catch (error) {
-        return res.status(500).json({ error: messages.internalServerError });
+        return res.status(500).json({ error:'Có lỗi xảy ra trong quá trình xử lý' + error });
       }
     }
   
+    //  api/vehicle  post
     async create(req, res) {
       try {
         const { 

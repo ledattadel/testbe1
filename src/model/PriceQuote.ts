@@ -32,7 +32,6 @@ export class PriceQuote {
   TimeUpdate: string;
 
 
-  
 
   @Column({ nullable: false })
   isActive: boolean | null;

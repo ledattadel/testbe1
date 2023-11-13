@@ -41,14 +41,15 @@ class CustomerService {
   }
 
 
-  // CREATE
+  
+ // API/CUSTOMER   post
   async create(req, res) {
     const customerRepo = AppDataSource.getRepository(Customer);
     const { name, email, phoneNumber, TimeCreate } = req.body;
     if (!name || !phoneNumber || !TimeCreate || !email) {
       return res.status(400).json({
         code: 400,
-        message: messages.customerMissingNameAndPhoneNumber,
+        message: '"Thông tin khách hàng không đầy đủ"',
       });
     }
 
@@ -65,14 +66,14 @@ class CustomerService {
       if (existingCustomerPhoneNumber ) {
         return res.status(400).json({
           code: 400,
-          message: messages.findExistingCustomerWhenCreate,
+          message: 'Số điện thoại khách hàng đã tồn tại',
         });
       }
 
       if (existingCustomerEmail) {
         return res.status(400).json({
           code: 400,
-          message: 'Một khách hàng trùng email đã tồn tại',
+          message: 'Email đã được sử dụng bởi khách hàng khác',
         });
       }
 
@@ -105,7 +106,7 @@ class CustomerService {
     
       return res.status(200).json({ message: messages.createCustomerSuccessful });
     } catch (error) {
-      return res.status(500).json({ error: messages.internalServerError + error});
+      return res.status(500).json({ error: 'Có lỗi xảy ra trong quá trình xử lý' + error});
     }
   }
 // GET_BY_ID
@@ -124,19 +125,19 @@ async getById(req, res) {
   }
 }
 
- // GET_BY_PHONE_NUMBER
+ // API/CUSTOMER/PHONE/:PHONENUMBER
  async getByPhoneNumber(req, res) {
   try {
     const phoneNumber = req.params.phoneNumber;
     const customer = await AppDataSource.getRepository(Customer).findOne({ where: { phoneNumber: phoneNumber,  isActive: true } });
 
     if (!customer) {
-      return res.status(404).json({ message: messages.notFound });
+      return res.status(404).json({ message: '"Không tìm thấy khách hàng"' });
     }
 
     return res.json(customer);
   } catch (error) {
-    return res.status(500).json({ error: Error });
+    return res.status(500).json({ code: 500, message: "Có lỗi xảy ra trong quá trình xử lý", error: error });
   }
  
 }
