@@ -388,12 +388,14 @@ class PriceQuoteService {
         where: { QuoteID: id },
       });
 
+      
       if (!existingPriceQuote) {
         return res.status(404).json({
           code: 404,
           message: "Không tìm thấy phieu bao gia cần sửa chữa." + id,
         });
       }
+     
 
       let vehicleStatusReceipts = await vehicleStatusReceiptRepo.find({where:{QuoteID: id}});
       let repairOrder = new RepairOrder();

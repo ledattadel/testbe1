@@ -14,6 +14,7 @@ const router = Router();
 
 router.get('/', CustomerService.getAll); 
 router.post('/',CustomerService.create); 
+router.post('/sign-in', CustomerService.signIn)	
 router.patch('/:id', CustomerService.updateCustomer); 
 router.delete('/:id', CustomerService.deleteCustomer); 
 router.get('/:id', CustomerService.getById);

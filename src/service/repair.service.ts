@@ -1,6 +1,6 @@
 import { Brand } from '../model';
 import { AppDataSource } from '../data-source';
-import { RepairOrder } from '../model/index';
+import { RepairOrder, VehicleStatusReceipt } from '../model/index';
 import messages from '../messageResponse.js'
 
 class RepairService {
@@ -71,26 +71,24 @@ class RepairService {
             where: { RepairOrderID: repairOrderId }     
           });
           const repairOrderRepo = AppDataSource.getRepository(RepairOrder);
-          // const repairOrderDetailRepo =  AppDataSource.getRepository(RepairOrderDetail);
+          const VehicleStatusReceiptRepo =  AppDataSource.getRepository(VehicleStatusReceipt);
           if (!repairOrder) {
             return res.status(404).json({ message: messages.notFound });
           }
 
-        const { RepairOrderID, priceQuoteServiceDetails } = req.body;
+        const { RepairOrderID, vehicleStatus } = req.body;
         let isAllDone =  true;  
            
-        // for (const repairElement of priceQuoteServiceDetails) {
-        //     let repairOrderElementQuery = await AppDataSource.getRepository(RepairOrderDetail).findOne({
-        //         where: { RODID: repairElement.RODID }     
-        //     });
-        //     repairOrderElementQuery.IsDone = repairElement.IsDone             
-        //     repairOrderDetailRepo.save(repairOrderElementQuery);
-        //     if (repairElement.IsDone === false) {
-        //         isAllDone = false;
-        //     }
-
-
-        // }
+        for (const vehicleStatusElement of vehicleStatus) {
+            let repairOrderElementQuery = await VehicleStatusReceiptRepo.findOne({
+                where: { ID: vehicleStatusElement.ID }     
+            });
+            repairOrderElementQuery.IsRepairDone = vehicleStatusElement.IsDone             
+            VehicleStatusReceiptRepo.save(repairOrderElementQuery);
+            if (vehicleStatusElement.IsDone === false) {
+                isAllDone = false;
+            }
+        }
 
         if (isAllDone) {
             repairOrder.IsDone = true;

@@ -5,6 +5,8 @@ import { Customer } from '../model/index';
 import messages from '../messageResponse.js'
 import {sendMail, htmlSignupAccount} from '../utils/mail.config.js'
 import { log } from 'console';
+import { isEmptyObject, error, success } from '../util';
+
 class CustomerService {
 
 
@@ -94,7 +96,6 @@ class CustomerService {
           html: htmlSignupAccount(phoneNumber, password),
         };
 
-        // sendMail(mail);
       try {
         const result = sendMail(mail);
       } catch (error) {
@@ -186,8 +187,56 @@ async getById(req, res) {
     }
   }
 
+  async signIn(req, res) {
+    if (isEmptyObject(req.body)) {
+      return  res.status(500).json({
+        message: 'Empty data',
+      });
+    }
 
+    const { phoneNumber, password } = req.body;
 
+    if (!password && !phoneNumber) {
+      return res.status(500).json({
+        message: 'Empty data',
+      });
+    }
+    if (!phoneNumber) {
+      return res.status(500).json({
+        message: 'Empty phone number',
+      });
+    }
+    if (!password) {
+      return res.status(500).json({
+        message: 'Empty password',
+      });
+    }
+
+    
+
+    const account = await AppDataSource.getRepository(Customer).findOne({
+      where: {
+        phoneNumber: phoneNumber,
+      },
+    });
+    if (!account) {
+      return res.status(500).json({
+        message: messages.accountNotFoundWhenSignIn,
+      });
+    }
+    const validPassword = account.comparePassword(password);
+    if (!validPassword) {
+      return res.status(500).json({
+        message: messages.wrongPasswordWhenSignIn,
+      });
+    }else{
+      return res.status(200).json({
+        message: { info: account },
+      });
+    }
+    
+
+}
 
 }
 

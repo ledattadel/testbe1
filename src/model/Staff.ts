@@ -40,7 +40,6 @@ export class Staff {
   @Column()
   RoleId: Number ;
 
-  // account - role
   @ManyToOne(() => Role, (role) => role.staff)
   @JoinColumn({ name: 'RoleId' })
   role: Role;

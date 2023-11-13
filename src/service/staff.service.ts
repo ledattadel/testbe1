@@ -134,18 +134,6 @@ class StaffService {
 	)
 
 
-
-  // return res.status(200).json({
-  //   username:staff.username ,
-  //   address:staff.address, 
-  //   idCardNumber:staff.idCardNumber, 
-  //   dob:staff.dob,
-  //   name:staff.name, 
-  //   email:staff.email, 
-  //   phoneNumber:staff.phoneNumber, 
-  //   role:staff.role 
-  // });
-   
     return success({
       res,
       message: { accessToken: accessToken },
