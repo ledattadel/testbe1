@@ -263,6 +263,42 @@ async getById(req, res) {
 
 }
 
+  async getAllPriceQuoteByCustomer(req, res) {
+
+    const CustomerId = req.params.id;
+
+    const getAllReceipts = await AppDataSource.getRepository(Receipt).find({ where: { CustomerID: CustomerId } });
+    let priceQuoteArr = [];
+    for (const receipt of getAllReceipts) {
+      const priceQuote = await AppDataSource.getRepository(PriceQuote).findOne({ where: { ReceiptID: receipt.ReceiptID } });
+ 
+    if (priceQuote) {
+      const priceQuoteFound = await AppDataSource.getRepository(PriceQuote).findOne({
+        where: { QuoteID: priceQuote.QuoteID, isActive: true },
+        relations: [
+          "staff",
+          "receipt.vehicle",
+          "receipt.customer",
+          "vehicleStatusReceipts.vehicleStatus",
+
+          "vehicleStatusReceipts.pqServiceDetails.service",
+
+          "vehicleStatusReceipts.pqProductDetails.productDetail.product.brand",
+          "repairOrder",
+        ],
+      });
+      priceQuoteArr.push(priceQuoteFound);
+    }
+    }
+
+
+      return res.status(200).json({
+        message: {  priceQuote: priceQuoteArr},
+      })
+    
+  }
+
+
 }
 
 export default new CustomerService();
