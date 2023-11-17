@@ -30,26 +30,19 @@ class RepairService {
       }
 
 
-      //  check xem phieu bao gia cua lenh sua chua da tao hoa don chua
+    
       
-
+//  api/repair/:id
       async getById(req, res) {
         try {
           const repairOrderId = req.params.id;
           const repairOrder = await AppDataSource.getRepository(RepairOrder).findOne({
             where: { RepairOrderID: repairOrderId },
             relations: [
-
-          "priceQuote.staff",
-          "priceQuote.receipt",
-          "priceQuote.receipt.vehicle",
-          "priceQuote.receipt.customer",
-
-          "priceQuote.priceQuoteProductDetails.productDetail.product.brand",
-          "priceQuote.priceQuoteProductDetails.productDetail.supplier",
-              "repairOrderDetails",
-              "repairOrderDetails.pqServiceDetail.service",
-              "repairOrderDetails.staff",
+              "staff",
+          "priceQuote",
+          "VehicleStatusReceipts.vehicleStatus",
+          "VehicleStatusReceipts.receipt",
             ],
           });
       
@@ -62,7 +55,15 @@ class RepairService {
           return res.status(500).json({ error: messages.internalServerError });
         }
       }
-      
+      async create(req, res) {
+        try {
+          const repairOrderId = req.params.id;
+
+        } catch (error) {
+          
+        }
+
+      }
 
       async update(req, res) {
         try {

@@ -29,7 +29,6 @@ export class Customer {
   @OneToMany(() => Receipt, (receipt) => receipt.customer)
   receipts: Receipt[];
 
-
   comparePassword = (password: string) => {
 		return bcrypt.compareSync(password, this.password)
 	}

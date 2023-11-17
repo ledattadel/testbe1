@@ -1,5 +1,5 @@
 import { AppDataSource } from '../data-source';
-import { Receipt , Staff, Customer, Vehicle, Brand, VehicleStatus, VehicleStatusReceipt} from '../model'; // Đảm bảo bạn import model `Receipt`
+import { Receipt , Staff, Customer, Vehicle, Brand, VehicleStatus, VehicleStatusReceipt, PriceQuote} from '../model'; // Đảm bảo bạn import model `Receipt`
 import messages from '../messageResponse.js';
 import {parseDateStringToDate, spitDateFromString, compareDateStrings, compare2DateBetweenStrings} from '../utils/support'
 class ReceiptService {
@@ -187,16 +187,6 @@ class ReceiptService {
       } = req.body;
   
       if (
-        // !timeCreate ||
-        // !staffId ||
-        // !customerPhoneNumber ||
-        // !customerName ||
-        // !NumberPlateVehicle ||
-        // !TypeVehicle ||
-        // !ColorVehicle ||
-        // !EngineNumberVehicle ||
-        // !ChassisNumberVehicle ||
-        // !BrandNameVehicle ||
         !Editor ||
         !TimeUpdate ||
         !VehicleStatus
@@ -212,6 +202,8 @@ class ReceiptService {
       const customerRepo = AppDataSource.getRepository(Customer);
       const vehicleRepo = AppDataSource.getRepository(Vehicle);
       const brandRepo = AppDataSource.getRepository(Brand);
+      const vehicleStatusRepo = AppDataSource.getRepository(VehicleStatus);
+      const VehicleStatusReceiptRepo = AppDataSource.getRepository(VehicleStatusReceipt);
   
       const receipt = await receiptRepo.findOne({ where: { ReceiptID: receiptId } });
   
@@ -225,69 +217,63 @@ class ReceiptService {
         return res.status(404).json({ message: messages.staffNotFound });
       }
   
-      // const customerQuery = await customerRepo.findOne({ where: { phoneNumber: customerPhoneNumber } });
-      // const vehicleQuery = await vehicleRepo.findOne({ where: { NumberPlate: NumberPlateVehicle } });
+     
   
-      // let newCustomer = customerQuery;
-      // let newVehicle = vehicleQuery;
-  
-      // if (!customerQuery) {
-      //   const customer = new Customer();
-      //   customer.name = customerName;
-      //   customer.email = customerEmail || null;
-      //   customer.phoneNumber = customerPhoneNumber;
-      //   customer.isActive = true;
-  
-      //   await customerRepo.save(customer);
-      //   newCustomer = await customerRepo.findOne({ where: { phoneNumber: customer.phoneNumber } });
-      // }
-  
-      // if (!vehicleQuery) {
-      //   const vehicle = new Vehicle();
-      //   vehicle.NumberPlate = NumberPlateVehicle;
-      //   vehicle.Type = TypeVehicle;
-      //   vehicle.Color = ColorVehicle;
-      //   vehicle.EngineNumber = EngineNumberVehicle;
-      //   vehicle.ChassisNumber = ChassisNumberVehicle;
-  
-      //   const existBrand = await brandRepo.findOne({
-      //     where: { BrandName: BrandNameVehicle },
-      //   });
-      //   let brandId = null;
-      //   if (existBrand) {
-      //     brandId = existBrand.BrandID;
-      //   } else {
-      //     let newBrand = new Brand();
-      //     newBrand.BrandName = BrandNameVehicle;
-      //     newBrand.isActive = true;
-      //     brandRepo.save(newBrand);
-      //     let findIdOfNewBrand = await brandRepo.findOne({
-      //       where: { BrandName: BrandNameVehicle },
-      //     });
-      //     brandId = findIdOfNewBrand.BrandID;
-      //   }
-  
-      //   vehicle.BrandId = brandId;
-      //   vehicle.isActive = true;
-  
-      //   await vehicleRepo.save(vehicle);
-      //   newVehicle = await vehicleRepo.findOne({ where: { NumberPlate: NumberPlateVehicle } });
-      // }
-  
+      try {
+        receipt.TimeUpdate = TimeUpdate;
+        receipt.Note = Note || receipt.Note;
+        receipt.editor = Editor;
+      
+        const existingPairs = [];
 
-      receipt.TimeUpdate = TimeUpdate;
-      // receipt.VehicleStatus = VehicleStatus || receipt.VehicleStatus;
-      receipt.Note = Note || receipt.Note;
-      receipt.editor = Editor;
-  
-      await receiptRepo.save(receipt);
+        for (let index = 0; index < VehicleStatus.length; index++) {
+          const vehicleStatus = VehicleStatus[index];
+        
+          // Kiểm tra xem cặp VehicleStatusID và ReceiptID đã xuất hiện chưa
+          const isDuplicatePair = existingPairs.some(
+            (pair) => pair.VehicleStatusID === vehicleStatus.id && pair.ReceiptID === receiptId
+          );
+        
+          if (!isDuplicatePair) {
+            // Nếu chưa xuất hiện, thêm vào mảng existingPairs và thực hiện logic khác
+            existingPairs.push({ VehicleStatusID: vehicleStatus.id, ReceiptID: receiptId });
+        
+            const vehicleStatusReceipt = new VehicleStatusReceipt();
+          
+            try {
+              vehicleStatusReceipt.Condition = vehicleStatus.Condition;
+              vehicleStatusReceipt.IsRepairDone = false;
+              vehicleStatusReceipt.isTranferToPriceQuote = false;
+              vehicleStatusReceipt.TimeCreate = TimeUpdate;
+              vehicleStatusReceipt.VehicleStatusID = vehicleStatus.id;
+              vehicleStatusReceipt.ReceiptID = receiptId;
+              vehicleStatusReceipt.RepairOrderID = null;
+        
+              await VehicleStatusReceiptRepo.save(vehicleStatusReceipt);
+            } catch (error) {
+              console.error('Error saving VehicleStatusReceipt:', error);
+            }
+          } else {
+            return res.status(500).json({
+              error: 'Duplicate pair found:',
+            });
+          }
+        }
+        await receiptRepo.save(receipt);
+      } catch (error) {
+        console.error('Error:', error);
+        return res.status(500).json({
+          error: 'An error occurred while processing the request.',
+        });
+      }
+      
 
       return res.json({
         message: messages.updateReceiptSuccessful,
       });
     } catch (error) {
       return res.status(500).json({
-        error: messages.internalServerError,
+        error: messages.internalServerError + error,
       });
     }
   }
@@ -315,7 +301,24 @@ class ReceiptService {
       });
     }
   }
+  async checkExistPriceQuote(req, res) {
+    try {
+      const receiptId = req.params.id;
+   
+      const receiptRepo = AppDataSource.getRepository(Receipt);
+      const priceQuoteRepo = AppDataSource.getRepository(PriceQuote);
 
+      let exitsPriceQuote = await priceQuoteRepo.findOne({where:{ReceiptID: receiptId}});
+     if (exitsPriceQuote) {
+      return res.status(200).json({ existPriceQuote: true });
+     }else{
+      return res.status(200).json({ existPriceQuote: false });
+     }
+      
+    } catch (error) {
+      return res.status(500).json({ error: messages.internalServerError });
+    }
+  }
 
 
 
@@ -393,8 +396,8 @@ class ReceiptService {
       return res.status(500).json({ error: messages.internalServerError });
     }
   }
-
-
+  
+ 
 }
 
 export default new ReceiptService();

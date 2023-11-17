@@ -16,6 +16,8 @@ import {
   VehicleStatus,
 } from "../model";
 import messages from "../messageResponse.js";
+import {mergeDataPriceQuoteUpdate} from '../utils/support'
+import { getManager } from 'typeorm';
 
 // {
 //   "Status": "Pending",
@@ -62,6 +64,7 @@ class PriceQuoteService {
           "vehicleStatusReceipts.pqServiceDetails.service",
 
           "vehicleStatusReceipts.pqProductDetails.productDetail.product.brand",
+          "vehicleStatusReceipts.pqProductDetails.productDetail.supplier",
           "repairOrder",
         ],
       });
@@ -369,6 +372,7 @@ class PriceQuoteService {
     }
   }
 
+  //  api/price-quote/startRepair/:id
   async startRepair(req, res) {
     try {
       const priceQuoteRepository = AppDataSource.getRepository(PriceQuote);
@@ -395,20 +399,36 @@ class PriceQuoteService {
           message: "Không tìm thấy phieu bao gia cần sửa chữa." + id,
         });
       }
-     
+      const { Status, Time, StaffID, ReceiptID, vehicleStatus } = req.body;
+    const requiredFields = [
+      "Time",
+      "StaffID",
+      "vehicleStatus",
+    ];
+    const missingFields = requiredFields.filter(
+      (field) => !req.body.hasOwnProperty(field)
+    );
 
-      let vehicleStatusReceipts = await vehicleStatusReceiptRepo.find({where:{QuoteID: id}});
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        code: 400,
+        message: `Missing fields: ${missingFields.join(", ")}`,
+      });
+    }
+
       let repairOrder = new RepairOrder();
       repairOrder.IsDone = false;
       repairOrder.priceQuote = existingPriceQuote;
       await repairOrderRepo.save(repairOrder);
 
-      for (const vehicleStatusReceipt of vehicleStatusReceipts) {
-         vehicleStatusReceipt.IsRepairDone = false;
-         vehicleStatusReceipt.IsAcceptedRepair = true;
-         vehicleStatusReceipt.isTranferToRepairOrder = true;
-         vehicleStatusReceipt.RepairOrderID = repairOrder.RepairOrderID; 
-        await vehicleStatusReceiptRepo.save(vehicleStatusReceipt);
+      for (const vehicleStatusReceipt of vehicleStatus) {
+        let vehicleStatusReceiptExist = await vehicleStatusReceiptRepo.findOne({where:{QuoteID: id, ID: vehicleStatusReceipt.ID}});
+        vehicleStatusReceiptExist.IsRepairDone = false;
+        vehicleStatusReceiptExist.IsAcceptedRepair = true;
+        vehicleStatusReceiptExist.isTranferToRepairOrder = true;
+        vehicleStatusReceiptExist.RepairOrderID = repairOrder.RepairOrderID;
+        vehicleStatusReceiptExist.staff =  vehicleStatusReceipt.technician;
+        await vehicleStatusReceiptRepo.save(vehicleStatusReceiptExist);
       }
       return res.status(201).json({
         message: "tạo lệnh sửa chữa thành công",
@@ -420,6 +440,7 @@ class PriceQuoteService {
       });
     }
   }
+
 
   async update(req, res) {
     try {
@@ -478,16 +499,32 @@ class PriceQuoteService {
       existingPriceQuote.TimeUpdate = TimeUpdate;
 
       let arrIDVehicleStatusElement = [];
+ 
+
+
+     
+
       for (const vehicleStatusElement of vehicleStatus) {
         arrIDVehicleStatusElement.push(vehicleStatusElement.ID);
   
-        let pqServiceArr = vehicleStatusElement.pqService || [];
         // delete all pqServiceDetail
-        await PQServiceDetailRepository.delete({ VehicleStatusReceipt: vehicleStatusElement.ID });
-        await PQProductDetailRepository.delete({ vehicleStatusReceipt: vehicleStatusElement.ID });
+        const pqServiceDetailDeleteResult = await PQServiceDetailRepository
+        .createQueryBuilder()
+        .delete()
+        .where("VehicleStatusReceiptID = :vehicleStatusId", { vehicleStatusId:  vehicleStatusElement.ID })
+        .execute();
+
+        const pqProductDetailDeleteResult = await PQProductDetailRepository
+        .createQueryBuilder()
+        .delete()
+        .where("VehicleStatusReceiptID = :vehicleStatusId", { vehicleStatusId:  vehicleStatusElement.ID })
+        .execute();
+        pqServiceDetailDeleteResult
+        pqProductDetailDeleteResult
         // delete all pqProductDetail
         
-  
+        let pqServiceArr = vehicleStatusElement.pqService || [];
+
         for (const priceQuoteServiceElement of pqServiceArr) {
           let newPQService = new PQServiceDetail();
           newPQService.Price = priceQuoteServiceElement.Price;
@@ -495,6 +532,10 @@ class PriceQuoteService {
           newPQService.VehicleStatusReceipt = vehicleStatusElement;
           await PQServiceDetailRepository.save(newPQService);
         }
+
+     
+
+
   
         let pqProductArr = vehicleStatusElement.pqProduct || [];
   
@@ -523,6 +564,7 @@ class PriceQuoteService {
         if (updateVehicleStatus) {
           updateVehicleStatus.ReceiptID = existingPriceQuote.ReceiptID;
           updateVehicleStatus.isTranferToPriceQuote = true;
+          updateVehicleStatus.QuoteID = existingPriceQuote.QuoteID;
           await vehicleStatusReceiptRepo.save(updateVehicleStatus);
         } else {
           return res.status(500).json({
@@ -545,7 +587,7 @@ class PriceQuoteService {
       await priceQuoteRepository.save(existingPriceQuote);
 
       return res.status(201).json({
-        message: "update phieu bao gia thanh cong",
+        message:  + " Cập nhật phieu bao gia thành công",
       });
     } catch (error) {
       return res.status(500).json({

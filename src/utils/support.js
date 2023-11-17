@@ -87,3 +87,59 @@ export function compareDateStrings(dateStr1, dateStr2) {
     return password;
   }
   
+
+  export function mergeDataPriceQuoteUpdate(inputData) {
+    const result = {
+      Status: inputData.Status,
+      TimeUpdate: inputData.TimeUpdate,
+      EditorID: inputData.EditorID,
+      vehicleStatus: [],
+      TimeCreateRepair: inputData.TimeCreateRepair,
+    };
+  
+    const serviceMap = new Map();
+    const productMap = new Map();
+  
+    inputData.dataService.forEach((service) => {
+      const key = service.vehicleStatus;
+      const existingService = serviceMap.get(key);
+  
+      if (existingService) {
+        existingService.Price = (parseFloat(existingService.Price) + parseFloat(service.Price)).toFixed(2);
+      } else {
+        serviceMap.set(key, { ...service });
+      }
+    });
+  
+    inputData.dataProduct.forEach((product) => {
+      const key = product.productDetailID + '_' + product.vehicleStatus;
+      const existingProduct = productMap.get(key);
+  
+      if (existingProduct) {
+        existingProduct.Quantity += product.Quantity;
+      } else {
+        productMap.set(key, { ...product });
+      }
+    });
+  
+    serviceMap.forEach((value) => {
+      result.vehicleStatus.push({ ID: value.vehicleStatus, pqService: [value] });
+    });
+  
+    productMap.forEach((value) => {
+      const vehicleStatusID = value.vehicleStatus;
+      const existingStatus = result.vehicleStatus.find((status) => status.ID === vehicleStatusID);
+  
+      if (existingStatus) {
+        if (!existingStatus.pqProduct) {
+          existingStatus.pqProduct = [];
+        }
+        existingStatus.pqProduct.push(value);
+      } else {
+        result.vehicleStatus.push({ ID: vehicleStatusID, pqProduct: [value] });
+      }
+    });
+  
+    return result;
+  }
+  

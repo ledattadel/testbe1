@@ -32,7 +32,7 @@ class ProductService {
       return res.status(500).json({ error: messages.internalServerError });
     }
   }
-
+//  api/product  POST
   async create(req, res) {
     try {
       const { ProductName, ProductDescription, BrandName,  Price } = req.body;

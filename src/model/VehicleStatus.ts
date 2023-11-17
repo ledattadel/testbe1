@@ -11,12 +11,6 @@ export class VehicleStatus {
   @Column({ nullable: false })
   Name: string;
 
-  // @Column({ nullable: true })
-  // ReceiptId: number;
-
-  // @ManyToOne(() => Receipt, (receipt) => receipt.vehicleStatuses)
-  // @JoinColumn({ name: 'ReceiptId' })
-  // receipt: Receipt;
 
   @OneToMany(() => VehicleStatusReceipt, (vsr) => vsr.vehicleStatus)
   vehicleStatusReceipts: VehicleStatusReceipt[];

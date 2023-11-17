@@ -9,7 +9,6 @@ export class Vehicle {
   @Column({ nullable: true })
   NumberPlate: string;
 
-
   @Column()
   TimeCreate: String;
   
@@ -25,14 +24,11 @@ export class Vehicle {
   @Column({ nullable: true })
   ChassisNumber: string;
 
-
-
   @Column({ nullable: false })
   isActive: boolean | null;
 
   @Column({ nullable: true })
   BrandId: number; 
-
 
   @ManyToOne(() => Brand, (brand) => brand.vehicles)
   @JoinColumn({ name: 'BrandId' })

@@ -187,6 +187,7 @@ async getById(req, res) {
     }
   }
 
+  //  api/customer/sign-in
   async signIn(req, res) {
     if (isEmptyObject(req.body)) {
       return  res.status(500).json({

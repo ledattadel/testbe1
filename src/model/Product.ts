@@ -25,9 +25,6 @@ export class Product {
   @JoinColumn({ name: 'BrandId' })
   brand: Brand;
 
-  @Column({ nullable: true })
-  Unit: string;
-
   @OneToMany(() => ProductDetail, (productDetail) => productDetail.product)
   productDetails: ProductDetail[];
 }

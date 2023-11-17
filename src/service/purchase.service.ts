@@ -68,7 +68,7 @@ async getAll(req, res) {
 
   
 
-
+  // api/purchase  tạo đơn nhập hàng
   async create(req, res) {
     try {
       const purchaseOrderRepository =  AppDataSource.getRepository(PurchaseOrder);
@@ -178,7 +178,7 @@ async getAll(req, res) {
       });
     }
   }
-  
+  //  api/purchase/:id  cập nhật đơn nhập hàng
   async update(req, res) {
     try {
       const purchaseOrderRepository = AppDataSource.getRepository(PurchaseOrder);

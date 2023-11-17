@@ -63,13 +63,13 @@ class VehicleService {
     async getByNumberPlate(req, res) {
       try {
         const NumberPlate = req.params.id;
-        const vehicle = await AppDataSource.getRepository(Vehicle).findOne({ where: { NumberPlate: NumberPlate, isActive: true } ,
+        const vehicle = await AppDataSource.getRepository(Vehicle).findOne({ where: { NumberPlate: NumberPlate.trim() } ,
           relations:[
             'brand'
           ]});
   
           if (!vehicle) {
-            return res.status(404).json({ code: 404, message: "Không tìm thấy thông tin xe" });
+            return res.status(404).json({ code: 404, message: "Không tìm thấy thông tin xe " + NumberPlate});
           }
 
         return res.json(vehicle);

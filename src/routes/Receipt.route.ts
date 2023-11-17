@@ -26,6 +26,8 @@ router.get('/:id', ReceiptService.getById);
 router.post('/', ReceiptService.create);
 router.patch('/:id', ReceiptService.update);
 router.delete('/:id', ReceiptService.delete);
+router.get('/existpricequote/:id',ReceiptService.checkExistPriceQuote);
+
 router.get('/statistics/total-by-time', ReceiptService.getTotalReceiptsByTimeRange);
 
 
